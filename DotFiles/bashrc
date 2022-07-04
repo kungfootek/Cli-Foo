@@ -1,0 +1,116 @@
+# .bashrc
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+        . /etc/bashrc
+fi
+
+# set PATH so it includes user's private rust bin if it exists
+if [ -d "$HOME/.cargo/bin" ] ; then PATH="$HOME/.cargo/bin:$PATH" 
+fi
+
+## Aliases
+alias ip='ip -c -h -s'
+alias ifconfig='ip a'
+alias anping='ansible -i ~/inventory.yml all -m ping'
+alias ls='ls --color'
+alias ackack='source ~/.venv/bin/activate'
+alias dack='deactivate'
+
+## Defaults
+export VISUAL=vim
+
+## Prompt Magick
+function MyPrompt {
+
+    ## This is for a later project
+    #   echo -n ${SEPARATORPATTERN} | wc -c
+	  SEPARATORPATTERN="*+"
+	  SEPARATORLENGTH="1" ## =LEN(SEPARATORPATTERN)/LEN(SEPARATORPATTERN)
+    SEPARATORWIDTH=15
+
+    ## Get on with Vars. 
+        GITBRANCH=`git branch --show-current 2> /dev/null`
+        EXITSTATUS="$?"
+        BOLD="\[\033[1m\]"
+        OFF="\[\033[m\]"
+
+        RED="\[\033[1;31m\]"
+        GREEN="\[\e[32;1m\]"
+        BLUE="\[\e[34;1m\]"
+        YELLOW="\[\e[33;1m\]"
+        MAGENTA="\[\e[35;1m\]"
+        CYAN="\[\e[36;1m\]"
+        WHITE="\[\e[37;1m\]"
+
+        # If Root, Red. Else, White.        
+        if [ ${UID} -eq 0 ];
+        then UID_COLOR=${RED}
+        else UID_COLOR=${WHITE}
+        fi
+
+        # If Python Env place {}
+        if [[ -n $VIRTUAL_ENV ]] 
+        then VB="{"; VE=" }"
+        else VB=""; VE=""
+        fi
+        
+        # If Error, change Branch color to red. Coming "Soon"(tm).
+        if [ "${EXITSTATUS}" -eq 0 ]
+        then EXITSTATCOLOR=${GREEN}
+        else EXITSTATCOLOR=${RED}
+        fi
+
+        SEPARATORHORIZONTAL=" ${CYAN}*${WHITE}-${RED}*${WHITE}-${BLUE}*${WHITE}-${YELLOW}*${WHITE}-${GREEN}*${WHITE}-${YELLOW}*${WHITE}-${MEGENTA}*${WHITE}-${CYAN}*${WHITE}-${RED}*${WHITE}-${BLUE}*${WHITE}-${GREEN}*${OFF}"
+        NEWLINE="\n"
+        SEPARATORVERTICAL="${WHITE}|"
+        DISPLAYUSERATHOST="${UID_COLOR}\u${MAGENTA} @ ${UID_COLOR}\h"
+        DISPLAYDAY="${MAGENTA}\D{%d}"
+        DISPLAYMONTH="${MAGENTA}\D{%m}"
+        DISPLAYTWODIGITYEAR="${MAGENTA}\D{%g}"
+        DISPLAYTIME="${CYAN}Time: \@"
+        WORKINGDIR="${WHITE} \w"
+
+## Put it all together. 
+PROMPT="${SEPARATORHORIZONTAL} ${NEWLINE} \
+${DISPLAYDAY} ${SEPARATORVERTICAL} ${DISPLAYUSERATHOST} ${NEWLINE} \
+${DISPLAYMONTH} ${SEPARATORVERTICAL} ${DISPLAYTIME} ${NEWLINE} \
+${DISPLAYTWODIGITYEAR} ${SEPARATORVERTICAL} ${WORKINGDIR}${NEWLINE}"
+
+  if [[ -n ${VB} ]] || [[ -n ${GITBRANCH} ]]
+  then PS1="${PROMPT}${GREEN}${VB}${EXITSTATCOLOR} ${GITBRANCH}${GREEN}${VE}${WHITE} ] ${OFF}"
+  else PS1="${PROMPT}${WHITE} ] ${OFF}"
+  fi
+
+    PS2="${BOLD}>${OFF} "
+}
+
+PROMPT_COMMAND=MyPrompt
+
+################
+#### Legend ####
+
+#  *-*-*-*-*-*-*-*-*-*-* 
+#  02 | blayde @ munin 
+#  07 | Time: 06:38 PM 
+#  22 |  ~
+# {  } ] 
+
+## Last line
+# ]           : No Py, no Git
+# { } ]       : Py, No Git
+# { Branch }  : Py, Git
+
+## Proposed 
+# []          : No Py
+# {}          : Py
+
+# [{0D}] | No Py, Py, Red on last execute failure
+# [{0M}] | No Py, Py, Yellow on last execute warning
+# [{YR}] | No Py, Py, Green on last execute success
+
+
+
+
+
+
+
