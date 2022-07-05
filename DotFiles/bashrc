@@ -1,7 +1,13 @@
 # .bashrc
 # Source global definitions
+
 if [ -f /etc/bashrc ]; then
         . /etc/bashrc
+fi
+
+# File for service authentication outside of Git.
+if [ -f ~/auths/.bash-auths ]; then
+        . ~/auths/.bash-auths
 fi
 
 # set PATH so it includes user's private rust bin if it exists
@@ -16,21 +22,14 @@ alias ls='ls --color'
 alias ackack='source ~/.venv/bin/activate'
 alias dack='deactivate'
 
-## Defaults
 export VISUAL=vim
 
 ## Prompt Magick
 function MyPrompt {
 
-    ## This is for a later project
-    #   echo -n ${SEPARATORPATTERN} | wc -c
-	  SEPARATORPATTERN="*+"
-	  SEPARATORLENGTH="1" ## =LEN(SEPARATORPATTERN)/LEN(SEPARATORPATTERN)
-    SEPARATORWIDTH=15
-
-    ## Get on with Vars. 
-        GITBRANCH=`git branch --show-current 2> /dev/null`
-        EXITSTATUS="$?"
+    ## Get on with Vars.  
+        EXITStatus=$? 
+        GitB=`git branch --show-current 2> /dev/null`
         BOLD="\[\033[1m\]"
         OFF="\[\033[m\]"
 
@@ -50,38 +49,44 @@ function MyPrompt {
 
         # If Python Env place {}
         if [[ -n $VIRTUAL_ENV ]] 
-        then VB="{"; VE=" }"
-        else VB=""; VE=""
+        then VB="{"; VE="}" 
+        else VB="["; VE="]"
         fi
+       
+        ## Error colors for the Status / Separator? So much real estate left here. 
+        SEPARATORHORIZONTAL=":E=${EXITStatus}: ${CYAN}*${WHITE}-${RED}*${WHITE}-${BLUE}*${WHITE}-${YELLOW}*${WHITE}-${GREEN}*${WHITE}-${YELLOW}*${WHITE}-${MEGENTA}*${WHITE}-${CYAN}*${OFF}"
+        SlashN="\n"
+        VertSep="${WHITE}|"
+        UserHost="${UID_COLOR}\u${MAGENTA} @ ${UID_COLOR}\h"
+        DispDy="${MAGENTA}\D{%d}"
+        DispMn="${MAGENTA}\D{%m}"
+        DispYr="${MAGENTA}\D{%g}"
+        DispTime="${CYAN}Time: \@"
+        WorkDir="${WHITE} \w"
+
+        if [ ${EXITStatus} != 0 ]
+        then StatA="${RED}${VB}${DispDy}${VE}${VertSep} ${UserHost}"
+        else StatA=" ${DispDy} ${VertSep} ${UserHost}"
+        fi
+
+        StatB=" ${DispMn} ${VertSep} ${DispTime}" ## Coming 'Soon'
         
-        # If Error, change Branch color to red. Coming "Soon"(tm).
-        if [ "${EXITSTATUS}" -eq 0 ]
-        then EXITSTATCOLOR=${GREEN}
-        else EXITSTATCOLOR=${RED}
+        if [ ${EXITStatus} == 0 ]
+        then StatC="${GREEN}${VB}${DispYr}${GREEN}${VE}${VertSep} ${WorkDir}"
+        else StatC=" ${DispYr} ${VertSep}${WorkDir}"
         fi
 
-        SEPARATORHORIZONTAL=" ${CYAN}*${WHITE}-${RED}*${WHITE}-${BLUE}*${WHITE}-${YELLOW}*${WHITE}-${GREEN}*${WHITE}-${YELLOW}*${WHITE}-${MEGENTA}*${WHITE}-${CYAN}*${WHITE}-${RED}*${WHITE}-${BLUE}*${WHITE}-${GREEN}*${OFF}"
-        NEWLINE="\n"
-        SEPARATORVERTICAL="${WHITE}|"
-        DISPLAYUSERATHOST="${UID_COLOR}\u${MAGENTA} @ ${UID_COLOR}\h"
-        DISPLAYDAY="${MAGENTA}\D{%d}"
-        DISPLAYMONTH="${MAGENTA}\D{%m}"
-        DISPLAYTWODIGITYEAR="${MAGENTA}\D{%g}"
-        DISPLAYTIME="${CYAN}Time: \@"
-        WORKINGDIR="${WHITE} \w"
-
+        StatD="${GREEN}${GitB} ${WHITE}:] "
+        
 ## Put it all together. 
-PROMPT="${SEPARATORHORIZONTAL} ${NEWLINE} \
-${DISPLAYDAY} ${SEPARATORVERTICAL} ${DISPLAYUSERATHOST} ${NEWLINE} \
-${DISPLAYMONTH} ${SEPARATORVERTICAL} ${DISPLAYTIME} ${NEWLINE} \
-${DISPLAYTWODIGITYEAR} ${SEPARATORVERTICAL} ${WORKINGDIR}${NEWLINE}"
+Prompt="${SEPARATORHORIZONTAL} ${SlashN} \
+${StatA} ${SlashN} \
+${StatB} ${SlashN} \
+${StatC} ${SlashN} \
+${StatD}${OFF}"
 
-  if [[ -n ${VB} ]] || [[ -n ${GITBRANCH} ]]
-  then PS1="${PROMPT}${GREEN}${VB}${EXITSTATCOLOR} ${GITBRANCH}${GREEN}${VE}${WHITE} ] ${OFF}"
-  else PS1="${PROMPT}${WHITE} ] ${OFF}"
-  fi
-
-    PS2="${BOLD}>${OFF} "
+  PS1=${Prompt}  
+  PS2="${BOLD}>${OFF} "
 }
 
 PROMPT_COMMAND=MyPrompt
@@ -89,28 +94,15 @@ PROMPT_COMMAND=MyPrompt
 ################
 #### Legend ####
 
-#  *-*-*-*-*-*-*-*-*-*-* 
-#  02 | blayde @ munin 
-#  07 | Time: 06:38 PM 
-#  22 |  ~
-# {  } ] 
+# *-*-*-*-*-*-*-*-*-*-* 
+#  0D | <user> @ <Host> 
+#  0M | Time: 02:46 AM 
+# {YR}|  ~/<pwd>
+# <IfGitBranch>:]
 
-## Last line
-# ]           : No Py, no Git
-# { } ]       : Py, No Git
-# { Branch }  : Py, Git
+# []          : No PyEnv
+# {}          : PyEnv
 
-## Proposed 
-# []          : No Py
-# {}          : Py
-
-# [{0D}] | No Py, Py, Red on last execute failure
-# [{0M}] | No Py, Py, Yellow on last execute warning
-# [{YR}] | No Py, Py, Green on last execute success
-
-
-
-
-
-
-
+# [{0D}] | No PyEnv, PyEnv, Red on last execute failure
+# [{0M}] | No PyEnv, PyEnv, Yellow on last execute warning
+# [{YR}] | No PyEnv, PyEnv, Green on last execute success
